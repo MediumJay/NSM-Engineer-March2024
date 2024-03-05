@@ -1,0 +1,1 @@
+-DNS for hostname resolution instead of editing /etc/hosts file
