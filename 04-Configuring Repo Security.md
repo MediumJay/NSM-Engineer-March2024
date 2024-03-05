@@ -314,3 +314,81 @@ After these are generated, we will use the CA to sign new certificates that are 
 - ### **repo.ext**: certificate extension config. This is where the Subject Alternative Name can be set to the hostname of the repo. This step needs to be done in order for the browser to browse to the fileshare and package repository using the repo’s hostname. We create this
 - ### **repo.crt**: Use the CSR and the CA private key to sign a new x.509 certificate with the CA. A “.crt” file is a digital certificate file that contains a public key, and is used to verify the authenticity of a website, server, or client. It is one of the most commonly used file formats for X.509 digital certificates, which are used in SSL/TLS encryption to secure web traffic and other types of communication.
 - The repo.crt and the repo.key files can now be used to set up HTTPS for the fileshare and the package repository
+
+
+
+
+# Summary: 
+
+
+Configure Repo and Fileshare Summary
+
+Fileshare
+- Install nginx
+- Move class files and emerging ruleset into fileshare directory
+Repo container = Local Certificate Authority
+- Generate localCA.key: CA private key
+- Use the CA private key to generate localCA.crt: root certificate. Fill out info
+Generate repo.key: Repo private key
+- Use the Repo private key to generate repo.csr: certificate signing request to send to the CA to request a new certificate. Fill out info
+- Create a certificate extension config so that the browser can browse to the fileshare using the repo’s host name
+- Use the CSR and the extension config to sign a new certificate with the CA: repo.crt
+repo.crt (public key/digital cert file) and repo.key (private) can now be used to set up HTTPS for the fileshare a package repository
+- Set up reverse proxy with nginx (proxy.conf)
+- Modify nginx.conf to disable port 80 listener
+- Create packages.conf and fileshare.conf to listen on localhost
+- Enable the appropriate ports
+- Start nginx
+- Trust CA on Student laptop and import it to the browser. All certificates signed by the CA will now be trusted and the browser will successfully validate the certs when accessing the repo and fileshare resources.
+- Trust CA on Kit boxes: In order for the other boxes in the kit to be able to reach the package repository and install packages via yum, they need to validate the repo certificate that is used to encypt the yum communications over the network.
+- Modify local.repo so it points to the new hosted location using https
+- End goal: Browse repo packages and fileshare using tls/https and point to secured local repository packages from any container.
+
+
+
+
+
+# ChatGPT Simplications to the Summary
+Fileshare Setup (Using Nginx):
+
+## Nginx Installation: 
+
+Nginx is like a server that helps us share files with others.
+Moving Files: We put our class files and ruleset into a special folder that Nginx can access. This folder is where we store files that others can see and use.
+
+## Setting up Nginx as a CA: 
+
+We made Nginx act like a special authority that can give out secure certificates. These certificates help ensure that our communications are safe and private.
+Creating Keys and Certificates:
+We made a secret key for our special authority (CA).
+With this key, we made a certificate that says our authority is trustworthy (localCA.crt).
+We also made a key for our file repository (repo.key).
+We asked our special authority (CA) to give us a certificate for our file repository (repo.crt).
+
+
+## Configuring Nginx:
+
+We told Nginx to act as a middleman using a reverse proxy. It helps manage our connections.
+We made sure Nginx only listens to secure connections (HTTPS) and not unsecured ones (HTTP).
+We set up configurations for our packages and fileshare to work securely.
+
+## Starting Nginx: 
+
+We turned on Nginx so that others can access our files using a secure connection.
+Certificate Trust:
+
+## Trusting CA Certificate: 
+
+We made sure that laptops and browsers trust our special authority (CA) so they know the certificates it gives out are safe.
+
+## Trusting CA Certificate on Kit Boxes: 
+
+We did the same thing for other computers (Kit boxes) in our setup to ensure they can access our files securely.
+Repository Configuration:
+
+## Changing Repository Settings: 
+
+We updated our repository settings to use the new secure location, making sure all communications are secure.
+Overall Goal: We set up a way to share files securely using HTTPS, making sure everything is safe and private within our network environment.
+
+I hope this breakdown helps clarify the process a bit more! Let me know if there's anything specific you'd like to understand better.
