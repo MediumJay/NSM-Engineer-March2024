@@ -86,6 +86,14 @@ done
 
 ```
 
+
+OR
+
+```
+for host in elastic{0..2} pipeline{0..2} kibana sensor repo; do sudo scp /etc/hosts elastic@$host:~/hosts && ssh -t elastic@$host 'sudo mv ~/hosts /etc/hosts && sudo systemctl restart network'; done
+```
+
+
 # Step 5 - Create an SSH Config file
 We are doing this so we dont have to type the username when SSHing to other boxes
 
@@ -164,3 +172,9 @@ OR
 ```
 for host in sensor repo elastic{0..2} pipeline{0..2} kibana; do ssh-copy-id $host; done
 ```
+
+
+
+# TO GET INTO HOSTS VIA LXC
+
+- lxc exect <HOSTNAME> /bin/bash

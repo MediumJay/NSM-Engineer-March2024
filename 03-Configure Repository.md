@@ -1,7 +1,7 @@
 # Step 1 - Access the repo box
 
 - Get into the REPO box
-  - ssh repo
+  - `ssh repo`
 
 
 # Step 2 - Install the repo tool NGINX
