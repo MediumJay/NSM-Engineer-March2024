@@ -1,1 +1,2 @@
 -DNS for hostname resolution instead of editing /etc/hosts file
+-slowing down on the CA portion with the repo so we can understand how the CA and keys work in the network
