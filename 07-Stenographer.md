@@ -4,6 +4,7 @@
 - Written by Graeme Connell 
 - Automatically manages Disk space
 - Written in Go
+- Github for Steno: https://github.com/google/stenographer/blob/master/README.md
 
 # Step 1 - Get onto the Sensor
 - `ssh sensor`
