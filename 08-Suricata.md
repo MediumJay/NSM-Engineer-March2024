@@ -35,7 +35,7 @@
 983 group: suricata (uncomment and change to suricata)
 
 1434 set-cpu-affinity: yes (turns on CPU pinning)
-1452 cpu: [0-2] (pinning cores 0 through 2)
+1452 cpu: ["0-2"] (pinning cores 0 through 2)
 1458 low [0] (sets affinity???)
 1459 medium: [1] (sets affinity???)
 1460 high [2] (sets affinity???)
