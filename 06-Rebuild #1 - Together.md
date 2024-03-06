@@ -30,7 +30,7 @@ PREFEX=
 
 # Step 5 - Repeat steps 3 through 4 for each container
 
-# Step 6 - Edit the /etc/hosts file to add the container hostnames
+# Step 6 - Edit the /etc/hosts file on "Laptop" to add the container hostnames + usernames
 - `sudo vi /etc/hosts/`
 - add the following: 
 ```
@@ -82,9 +82,11 @@ So we dont have to type password when ssh-ing
 for host in sensor elastic{0..2} pipeline{0..2} kibana; do ssh-copy-id $host; done
 ```
 
-# Step 10 - Push the LocalCA cert to the other containers
+# Step 10 - Push the LocalCA cert from repo container to the other containers
 
-- ssh into the repo `ssh repo`
+- certs already created and repo configured so skip that process
+- ssh into the repo 
+  - `ssh repo`
 - use this script: 
 
 ```
@@ -93,6 +95,7 @@ for host in elastic{0..2} pipeline{0..2} kibana sensor; do sudo scp ~/certs/loca
 
 # Step 11 - Point the containers to the local repo
 
+- `ssh <container name>`
 - `mkdir ~/archive`
 - `sudo mv /etc/yum.repos.d/* ~/archive/`
 - `sudo vi /etc/yum.repos.d/local.repo`
@@ -136,23 +139,99 @@ enabled=1
 gpgcheck=0
 ```
 - `sudo yum makecache fast` 
-- `sudo yum list suricata`
+- `sudo yum list suricata` - to check yum is puling from local repo
 
 
-# Step 12 - 
+# Step 12 - Move on to the Sensor capture interface configuration
 
-# Step 13 - 
+- `ssh sensor`
 
-# Step 14 - 
+- `sudo yum install ethtool -y` - to show features of interfaces
 
-# Step 15 - 
+- Check if checksumming feature is turned on
+  - `sudo ethtool -k eth1`
+  - notice it is on so download script from repo to disable
 
-# Step 16 - 
+- `sudo curl -LO https://repos/fileshare/interface.sh`
 
-# Step 17 - 
+- `sudo chmod +x interface.sh`
 
-# Step 18 - 
+- `sudo ./interface.sh eth1`
 
-# Step 19 - 
+- `sudo ethtool -k eth1` - again to check
 
-# Step 20 - 
+
+
+# Step 13 - Make the checksum disable persistent by creating a script
+
+- `sudo vi /sbin/ifup-local`
+  - insert this script: 
+```
+#!/bin/bash
+if [[ "$1" == "eth1" ]]
+then
+for i in rx tx sg tso ufo gso gro lro rxvlan txvlan
+do
+/usr/sbin/ethtool -K $1 $i off
+done
+/usr/sbin/ethtool -N $1 rx-flow-hash udp4 sdfn
+/usr/sbin/ethtool -N $1 rx-flow-hash udp6 sdfn
+/usr/sbin/ethtool -n $1 rx-flow-hash udp6
+/usr/sbin/ethtool -n $1 rx-flow-hash udp4
+/usr/sbin/ethtool -C $1 rx-usecs 10
+/usr/sbin/ethtool -C $1 adaptive-rx off
+/usr/sbin/ethtool -G $1 rx 4096
+
+/usr/sbin/ip link set dev $1 promisc on
+
+fi
+```
+- make it executable
+  - `sudo chmod +x /sbin/ifup-local`
+
+
+
+# Step 14 - Modfy the ifup script to call our ifup-local script
+
+- `sudo vi /etc/sysconfig/network-scripts/ifup`
+  - shift + g + o to go to bottom and then insert one line above the "exec" line
+  - add this change: 
+```
+if [ -x /sbin/ifup-local ]; then
+/sbin/ifup-local ${DEVICE}
+fi
+```
+
+
+
+# Step 15 - Edit interface Eth1
+- `sudo vi /etc/sysconfig/network-scripts/ifcfg-eth1`
+- add these changes:
+```
+DEVICE=eth1
+BOOTPROTO=none
+ONBOOT=yes
+NM_CONTROLLED=no
+TYPE=Ethernet
+```
+
+# Step 16 - Restart the network to verify the checksumming remains off
+- `sudo systemctl restart network`
+- `sudo ethtool -k eth1`
+- notice that the checksumming remains off. Yippee
+- can also see via `ip a` that eth1 is in promisc mode
+
+# Step 17 - test our capture inteface
+- we will use tcpdump to monitor our network traffic and test inteface
+- `sudo tcpdump -nn -i eth1`
+  - we are seeing SSH traffic so we will add a filter
+  - `sudo tcpdump -nn -i eth1 '!port 22'`
+
+
+# Summary 
+- We statically set the eth0 interface on all containers + disabled dhcp
+- We edited /etc/hosts and copied to all containers so we dont have to type IPs anymore when SSH-ing
+- The ssh keys + config were already created so we copied the keys to all the containers so we dont have to type passwords anymore when SSH-ing
+- The repo and CA/certs were already configured so we copied the localCA.crt to all the containers so they will trust the local CA
+- We pointed all the containers to use the local repo container by editing their /etc/yum.repos.d/ directory
+- We then configured the capture interface to have no checksumming, be in promisc mode, and verify it is sensing traffic
