@@ -393,7 +393,7 @@ to the fileshare
 
 - `sudo yum list zeek` 
   - verify it is local repo
-- `sudo yum install zeek zeek-plugin zeek-plugin-af_packet -y`
+- `sudo yum install zeek zeek-plugin-kafka zeek-plugin-af_packet -y`
 
 # Step 41 - Edit zeekctl.cfg file
 - `sudo vi /etc/zeek/zeekctl.cfg`
@@ -599,25 +599,21 @@ sudo /sbin/setcap cap_net_raw,cap_net_admin=eip /usr/bin/zeek;sudo /sbin/setcap 
 # Step 63 - Get onto pipeline containers to install Kafka and Zookeeper
 - `ssh pipeline0`
 
-# Step 2 - Install Kafka and Zookeeper
+# Step 64 - Install Kafka and Zookeeper
 - `sudo yum install kafka zookeeper -y`
 
-# Step 3 - Configure Zookeeper first so its ready to manage - create data directory
+# Step 65 - Configure Zookeeper first so its ready to manage - create data directory
 - `sudo mkdir -p /data/zookeeper`
 
-# Step 4 - Change Permissions to directory
+# Step 66 - Change Permissions to directory
 - `sudo chown -R zookeeper: /data/zookeeper/`
 
-# Step 5 - Configure zoo.cfg
+# Step 67 - Configure zoo.cfg
 - `sudo vi /etc/zookeeper/zoo.cfg`
-- Important sections: 
-```
-
-```
-
 - Make these edits: 
   - `:set nu`
-  - `:%d` - just nuke it and use the provided one
+  - `:%d` - just nuke it and use the provided one:
+
 ```
  # where zookeeper will store its data
  dataDir=/data/zookeeper
@@ -648,39 +644,42 @@ sudo /sbin/setcap cap_net_raw,cap_net_admin=eip /usr/bin/zeek;sudo /sbin/setcap 
  syncLimit=2
 ```
 
-# Step 6 - Create an ID for each zookeeper instance
+# Step 68 - Create an ID for each zookeeper instance
 - `sudo touch /data/zookeeper/myid`
 
-# Step 7 - Give zookeeper permissions to the id
+# Step 69 - Give zookeeper permissions to the id
 - `sudo chown -R zookeeper: /data/zookeeper/myid`
 
-# Step 8 - Enter the respective IDs into the myid file
+# Step 70 - Enter the respective IDs into the myid file
 instance | serverID
 pipeline0 | 1
 pipeline1 | 2
 pipelien2 | 3
 
 - `echo '#' | sudo tee /data/zookeeper/myid` 
-  - one way
-- `sudo vi /data/zookeeper/myid` 
-  - another way
 
-# Step 9 - Open the firewall
+# Step 71 - Open the firewall
 - `sudo firewall-cmd --add-port={2181,2888,3888}/tcp --permanent`
 - `sudo firewall-cmd --reload`
 
-# Step 10 - Repeat steps 2 through 9 on the other pipelines
+# Step 72 - Repeat steps 64 through 71 on the other pipelines
+- easy pastable just make sure to replace the # with the respective serverID:
 
-# Step 11 - Enable and start zookeeper on all pipeline containers
+```
+sudo yum install kafka zookeeper -y;sudo mkdir -p /data/zookeeper;sudo chown -R zookeeper: /data/zookeeper/;sudo vi /etc/zookeeper/zoo.cfg;echo '#' | sudo tee /data/zookeeper/myid;sudo firewall-cmd --add-port={2181,2888,3888}/tcp --permanent;sudo firewall-cmd --reload;sudo firewall-cmd --list-all
+```
+
+
+# Step 73 - Enable and start zookeeper on all pipeline containers
 -`sudo systemctl enable --now zookeeper`
 
 
-# Step 12 - On the Ubuntu Laptop issue the stats command to each of the Zookeeper clients on client port
+# Step 74 - On the Ubuntu Laptop issue the stats command to each of the Zookeeper clients on client port
 - this script verfies communications (leader and 2 followers)
 ```
 for host in pipeline{0..2}; do (echo "stats" | nc $host 2181 -q 2); done
 ```
-- looker for "mode: " it should have 2 followers and 1 leader
+- looking for "mode: " it should have 2 followers and 1 leader
 - order doesnt matter
 
 
@@ -688,17 +687,18 @@ for host in pipeline{0..2}; do (echo "stats" | nc $host 2181 -q 2); done
 
 
 
+ # KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA
 
-
-# Step 13 - Configure Kafka by making /data/kafka 
+# Step 75 - Get onto the Pipelines and Configure Kafka by making /data/kafka 
+- `ssh pipeline0`
 - `sudo mkdir -p /data/kafka`
 - `sudo chown -R kafka: /data/kafka`
 
-# Step 14 - Create a copy of our server.properties before we edit it 
+# Step 76 - Create a copy of our server.properties before we edit it 
 - `sudo cp /etc/kafka/server{.properties,.properties.bk}`
 
 
-# Step 15 - Edit server.properties
+# Step 77 - Edit server.properties
 - `sudo vi /etc/kafka/server.properties`
 instance | brokerID
 pipeline0 | 0
@@ -707,7 +707,8 @@ pipeline2 | 2
 - change line 3 for the respective pipeline
 - change line 15 listeners hostname for resp pipeline
 - change line 21 advertised ilisteners hostname for resp pipeline
-- make these changes: 
+- make them in the good config: 
+  -`:%d` and then add above lines
 ```
 # The unique id of this broker should be different for each kafka node. Good practice is to match the kafka broker id to the zookeeper server id.
 broker.id=0
@@ -767,15 +768,20 @@ zookeeper.connect=pipeline0:2181,pipeline1:2181,pipeline2:2181
 zookeeper.connection.timeout.ms=30000
 ```
 
-# Step 16 - Open the firewall
+# Step 78 - Open the firewall
 - `sudo firewall-cmd --add-port=9092/tcp --permanent; sudo firewall-cmd --reload`
 
-# Step 17 - Repeat steps 13 to 16 for the other pipelines
+# Step 79 - Repeat steps 75 to 78 for the other pipelines
+- Easy pastable: 
 
-# Step 18 - Start all 3 kafkas but dont enable boot start
+```
+sudo mkdir -p /data/kafka;sudo chown -R kafka: /data/kafka;sudo cp /etc/kafka/server{.properties,.properties.bk};sudo vi /etc/kafka/server.properties;sudo firewall-cmd --add-port=9092/tcp --permanent;sudo firewall-cmd --reload;sudo firewall-cmd --list-all
+```
+
+# Step 80 - Start all 3 kafkas but dont enable boot start
 - `sudo systemctl start kafka`
 
-# Step 19 - Create a test topic to verify Kafka cluster on pipeline0
+# Step 81 - Create a test topic to verify Kafka cluster on pipeline0
 ## Create Topic
 `sudo /usr/share/kafka/bin/kafka-topics.sh --bootstrap-server pipeline0:9092 --create --topic test --partitions 3 --replication-factor 3`
 - no errors is good
@@ -793,24 +799,24 @@ zookeeper.connection.timeout.ms=30000
 
 
 
-# Step 20 - Create zeek-raw topic and Move Zeek data over to kafka
+# Step 82 - Create zeek-raw topic and Move Zeek data over to kafka
 - create zeek-raw topic so there is a place for the zeek data to go
   - `sudo /usr/share/kafka/bin/kafka-topics.sh --bootstrap-server pipeline0:9092 --create --topic zeek-raw --partitions 3 --replication-factor 3`
 - checkout the topic
   - `sudo /usr/share/kafka/bin/kafka-topics.sh --bootstrap-server pipeline0:9092 --describe --topic zeek-raw`
 
-# Step 21 - Go back to you sensor
+# Step 83 - Go back to your sensor
 - `ssh sensor`
 
-# Step 22 - Add the kafka plugin into zeek via kafka.zeek script
-- plugins are at /usr/share/zeek/site/scripts
+# Step 84 - Add the kafka plugin into zeek via kafka.zeek script
+- `sudo vi /usr/share/zeek/site/scripts/kafka.zeek`
 - make these edits to kafka.zeek:
   - `:set nu` 
 ```
 6 redef Kafka::kafka_conf = table(
 7 ["metadata.broker.list"] = "pipeline0:9092,pipeline1:9092,pipeline2:9092"); 
 ```
-# Step 23 - Add the kafka script to local.zeek 
+# Step 85 - Add the kafka script to local.zeek 
 - `sudo vi /usr/share/zeek/site/local.zeek`
 - make these changes at the bottom: 
   - shift+g
@@ -819,14 +825,14 @@ zookeeper.connection.timeout.ms=30000
 ```
 
 
-# Step 24 - redeploy zeek
+# Step 86 - redeploy zeek
 - `sudo -u zeek zeekctl deploy`
 - `sudo -u zeek zeekctl status`
 
-# Step 25 - Verify zeek traffic is making it to Kafka
+# Step 87 - Verify zeek traffic is making it to Kafka
 - `ssh pipeline0`
 - `sudo /usr/share/kafka/bin/kafka-console-consumer.sh --bootstrap-server pipeline0:9092 --topic zeek-raw`
 - generate traffic with a curl and should see it output from the previous command
 
 
-  # KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA KAFKA
+ 
