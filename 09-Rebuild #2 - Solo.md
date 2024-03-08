@@ -343,7 +343,6 @@ TYPE=Ethernet
 - make the following change: 
 ```
 OPTIONS="--af-packet=eth1 --user suricata --group suricata" 
-
 ```
 
 # Step 33 - Import rules into Suricata
