@@ -22,7 +22,7 @@ elasticsearch.hosts: ["http://elastic0:9200","http://elastic1:9200","http://elas
 # Step 5 - install nginx
 - `sudo yum install nginx -y`
 
-# Step - edit kibana.conf inside nginx directory
+# Step 6 - edit kibana.conf inside nginx directory
 - `sudo vi /etc/nginx/conf.d/kibana.conf`
 - past this inside: 
 ```
@@ -46,7 +46,7 @@ server {
 }
 ```
 
-# Step - Edit the nginx.conf in the nginx directory
+# Step 7 - Edit the nginx.conf in the nginx directory
 - `sudo vi /etc/nginx/nginx.conf`
 - comment these lines out to prevent conflicts
   - `:set nu`
@@ -57,7 +57,7 @@ server {
 ```
 
 
-# Step - Firewall
+# Step 8 - Firewall
 - `sudo firewall-cmd --add-port=80/tcp --permanent`
 - `sudo firewall-cmd --reload`
 - `sudo firewall-cmd --list-all`
@@ -65,49 +65,39 @@ server {
 sudo firewall-cmd --add-port=80/tcp --permanent;sudo firewall-cmd --reload;sudo firewall-cmd --list-all
 ```
 
-# Step - Enable and start nginx
+# Step 9 - Enable and start nginx
 `sudo systemctl enable nginx --now`
 
 
-# Step - Enable and start kibana
+# Step 10 - Enable and start kibana
 `sudo systemctl enable kibana --now`
 
+# Step 11 - Go to browser and navigate to Kibana
+- http://kibana
+
+# Step 12 - Explore kibana
+- Checkout Management > Stack Managemetn 
+- Checkout management > dev tools
+
+# Step 13 - Pull down ECS mappings from fileshare, unzip, and install JQ
+- `curl -LO https://repo/fileshare/kibana/ecskibana.tar.gz`
+- `tar -zxvf ecskibana.tar.gz`
+- `sudo yum install jq -y`
+
+# Step 14 - Add the mapping templates to kibana
+
+- `cd ecskibana` 
+- `./import-index-templates.sh http://elastic0:9200`
+
+# Step 15 - Verify the mapping templates were added to kibana using the API
+- navigate to devtools (management> dev tools)
+- `GET _cat/templates?v`
+- look for `ecs_zeek` and `ecs_suricata`
+- cannot create an index pattern for FSF until logstash is configured
+
+
 # Step - troubleshoot
-`journalctl -xeu kibana`
-# Step - 
+- `journalctl -xeu kibana`
+- Make sure /etc/hosts only has our entries and not the defaults below; i made this error
+- Also if its bugged, stop and restart nginx+kibana
 
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
-
-# Step - 
