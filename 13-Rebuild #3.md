@@ -73,6 +73,12 @@ PREFEX=
   Host kibana
     HostName kibana
     User elastic
+
+
+
+ip hostname
+ip hostname
+ip hostname
 ```
 - if these entries already exist then /etc/hosts is good
 

@@ -44,7 +44,7 @@
 # Step 3 - Edit /etc/hosts file to tie hostnames to IPs
 
 - `sudo vi /etc/hosts`
-- add the following additions to the file
+- add the following additions to the file DELETE THE PREVIOUS
 ```
 10.81.139.30 elastic0
 10.81.139.31 elastic1
