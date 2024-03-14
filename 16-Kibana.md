@@ -19,7 +19,7 @@ server.name: kibana
 elasticsearch.hosts: ["http://elastic0:9200","http://elastic1:9200","http://elastic2:9200"]
 ```
 
-# Step 5 - install nginx
+# Step 5 - install nginx for reverse proxy
 - `sudo yum install nginx -y`
 
 # Step 6 - edit kibana.conf inside nginx directory
